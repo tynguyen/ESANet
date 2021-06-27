@@ -12,22 +12,24 @@ from .nyuv2 import NYUv2Base
 
 
 class NYUv2(NYUv2Base, DatasetBase):
-    def __init__(self,
-                 data_dir=None,
-                 n_classes=40,
-                 split='train',
-                 depth_mode='refined',
-                 with_input_orig=False):
+    def __init__(
+        self,
+        data_dir=None,
+        n_classes=40,
+        split="train",
+        depth_mode="refined",
+        with_input_orig=False,
+    ):
         super(NYUv2, self).__init__()
         assert split in self.SPLITS
         assert n_classes in self.N_CLASSES
-        assert depth_mode in ['refined', 'raw']
+        assert depth_mode in ["refined", "raw"]
 
         self._n_classes = n_classes
         self._split = split
         self._depth_mode = depth_mode
         self._with_input_orig = with_input_orig
-        self._cameras = ['kv1']
+        self._cameras = ["kv1"]
 
         if data_dir is not None:
             data_dir = os.path.expanduser(data_dir)
@@ -35,19 +37,19 @@ class NYUv2(NYUv2Base, DatasetBase):
             self._data_dir = data_dir
 
             # load filenames
-            fp = os.path.join(self._data_dir,
-                              self.SPLIT_FILELIST_FILENAMES[self._split])
+            fp = os.path.join(
+                self._data_dir, self.SPLIT_FILELIST_FILENAMES[self._split]
+            )
             self._filenames = np.loadtxt(fp, dtype=str)
         else:
             print(f"Loaded {self.__class__.__name__} dataset without files")
 
         # load class names
-        self._class_names = getattr(self, f'CLASS_NAMES_{self._n_classes}')
+        self._class_names = getattr(self, f"CLASS_NAMES_{self._n_classes}")
 
         # load class colors
         self._class_colors = np.array(
-            getattr(self, f'CLASS_COLORS_{self._n_classes}'),
-            dtype='uint8'
+            getattr(self, f"CLASS_COLORS_{self._n_classes}"), dtype="uint8"
         )
 
         # note that mean and std differ depending on the selected depth_mode
@@ -110,10 +112,7 @@ class NYUv2(NYUv2Base, DatasetBase):
         return self._with_input_orig
 
     def _load(self, directory, filename):
-        fp = os.path.join(self._data_dir,
-                          self.split,
-                          directory,
-                          f'{filename}.png')
+        fp = os.path.join(self._data_dir, self.split, directory, f"{filename}.png")
         im = cv2.imread(fp, cv2.IMREAD_UNCHANGED)
         if im.ndim == 3:
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -124,14 +123,15 @@ class NYUv2(NYUv2Base, DatasetBase):
         return self._load(self.RGB_DIR, self._filenames[idx])
 
     def load_depth(self, idx):
-        if self._depth_mode == 'raw':
+        if self._depth_mode == "raw":
             return self._load(self.DEPTH_RAW_DIR, self._filenames[idx])
         else:
             return self._load(self.DEPTH_DIR, self._filenames[idx])
 
     def load_label(self, idx):
-        return self._load(self.LABELS_DIR_FMT.format(self._n_classes),
-                          self._filenames[idx])
+        return self._load(
+            self.LABELS_DIR_FMT.format(self._n_classes), self._filenames[idx]
+        )
 
     def __len__(self):
         return len(self._filenames)
